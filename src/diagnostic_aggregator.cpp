@@ -168,9 +168,9 @@ int main(int argc, char const *const argv[]) {
 
     rclcpp::executors::SingleThreadedExecutor exe;
 
-    std::shared_ptr<DiagnosticAggregator> socket_can_monitor = std::make_shared<DiagnosticAggregator>(rclcpp::NodeOptions());
+    std::shared_ptr<DiagnosticAggregator> diagnostic_aggregator = std::make_shared<DiagnosticAggregator>(rclcpp::NodeOptions());
 
-    exe.add_node(socket_can_monitor->get_node_base_interface());
+    exe.add_node(diagnostic_aggregator->get_node_base_interface());
 
     exe.spin();
 
