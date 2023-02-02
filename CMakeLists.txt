@@ -90,6 +90,13 @@ install(TARGETS diagnostic_aggregator_lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)
 
-ament_export_dependencies(rosidl_default_runtime)
+ament_export_dependencies(
+        rosidl_default_runtime
+        rclcpp
+        rclcpp_components
+        rclcpp_lifecycle
+        lifecycle_msgs
+        diagnostic_msgs
+        )
 
 ament_package()
