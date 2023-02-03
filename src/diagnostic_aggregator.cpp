@@ -21,6 +21,7 @@ DiagnosticAggregator::DiagnosticAggregator(const rclcpp::NodeOptions &options) :
 }
 
 CallbackReturn DiagnosticAggregator::on_configure(const rclcpp_lifecycle::State &previous_state) {
+    RCL_UNUSED(previous_state);
 
     //check and create publisher
     if (this->get_parameter("agg_topic").get_type() != rclcpp::PARAMETER_STRING) {
@@ -60,6 +61,7 @@ CallbackReturn DiagnosticAggregator::on_configure(const rclcpp_lifecycle::State 
 }
 
 CallbackReturn DiagnosticAggregator::on_cleanup(const rclcpp_lifecycle::State &previous_state) {
+    RCL_UNUSED(previous_state);
 
     //delete publisher
     this->diagnostic_publisher.reset();
@@ -73,6 +75,7 @@ CallbackReturn DiagnosticAggregator::on_cleanup(const rclcpp_lifecycle::State &p
 }
 
 CallbackReturn DiagnosticAggregator::on_activate(const rclcpp_lifecycle::State &previous_state) {
+    RCL_UNUSED(previous_state);
 
     //create timer
     this->timer_update = this->create_wall_timer(1000ms / this->update_freq, [this] { update(); });
@@ -85,6 +88,7 @@ CallbackReturn DiagnosticAggregator::on_activate(const rclcpp_lifecycle::State &
 }
 
 CallbackReturn DiagnosticAggregator::on_deactivate(const rclcpp_lifecycle::State &previous_state) {
+    RCL_UNUSED(previous_state);
 
     //delete timer
     this->timer_update.reset();
@@ -97,6 +101,7 @@ CallbackReturn DiagnosticAggregator::on_deactivate(const rclcpp_lifecycle::State
 }
 
 CallbackReturn DiagnosticAggregator::on_shutdown(const rclcpp_lifecycle::State &previous_state) {
+    RCL_UNUSED(previous_state);
 
     if (this->diagnostic_publisher.get() != nullptr) this->diagnostic_publisher.reset();
     if (this->diagnostic_subscriber.get() != nullptr) this->diagnostic_subscriber.reset();
@@ -107,6 +112,7 @@ CallbackReturn DiagnosticAggregator::on_shutdown(const rclcpp_lifecycle::State &
 }
 
 CallbackReturn DiagnosticAggregator::on_error(const rclcpp_lifecycle::State &previous_state) {
+    RCL_UNUSED(previous_state);
 
     if (this->diagnostic_publisher.get() != nullptr) this->diagnostic_publisher.reset();
     if (this->diagnostic_subscriber.get() != nullptr) this->diagnostic_subscriber.reset();
