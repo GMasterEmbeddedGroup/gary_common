@@ -85,6 +85,7 @@ set(msg_files
         msg/ClientCommand.msg
         msg/ClientReceive.msg
         msg/ImageTransmitter.msg
+        msg/AutoAIM.msg
         )
 
 if(BUILD_TESTING)
