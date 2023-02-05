@@ -17,8 +17,6 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
@@ -59,35 +57,6 @@ ament_target_dependencies(
 rclcpp_components_register_nodes(diagnostic_aggregator_lib "gary_common::DiagnosticAggregator")
 
 
-set(msg_files
-        msg/DR16Receiver.msg
-        msg/GameStatus.msg
-        msg/GameResult.msg
-        msg/RobotHP.msg
-        msg/ICRABuffDebuffZoneAndLurkStatus.msg
-        msg/FieldEvents.msg
-        msg/SupplyProjectileAction.msg
-        msg/SupplyProjectileRequest.msg
-        msg/RefereeWarning.msg
-        msg/DartRemainingTime.msg
-        msg/RobotStatus.msg
-        msg/PowerHeat.msg
-        msg/RobotPosition.msg
-        msg/RobotBuff.msg
-        msg/AerialRobotEnergy.msg
-        msg/RobotHurt.msg
-        msg/ShootData.msg
-        msg/BulletRemaining.msg
-        msg/RFIDStatus.msg
-        msg/DartClientCmd.msg
-        msg/InteractiveData.msg
-        msg/CustomController.msg
-        msg/ClientCommand.msg
-        msg/ClientReceive.msg
-        msg/ImageTransmitter.msg
-        msg/AutoAIM.msg
-        )
-
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -100,12 +69,6 @@ if(BUILD_TESTING)
 endif()
 
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-        ${msg_files}
-        DEPENDENCIES
-        std_msgs
-        )
-
 install(TARGETS diagnostic_aggregator
         DESTINATION lib/${PROJECT_NAME}
 )
@@ -116,8 +79,6 @@ install(TARGETS diagnostic_aggregator_lib
         RUNTIME DESTINATION bin)
 
 ament_export_dependencies(
-        rosidl_default_runtime
-        std_msgs
         rclcpp
         rclcpp_components
         rclcpp_lifecycle
