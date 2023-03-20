@@ -16,38 +16,18 @@ LifecycleManager::LifecycleManager(const rclcpp::NodeOptions & options) : rclcpp
     this->declare_parameter("update_rate", 10.0f);
 
     //get node_names
-    if (this->get_parameter("node_names").get_type() != rclcpp::PARAMETER_STRING_ARRAY) {
-        RCLCPP_ERROR(this->get_logger(), "node_names type must be string array");
-        return;
-    }
     this->node_names = this->get_parameter("node_names").as_string_array();
 
     //get diagnose_topic
-    if (this->get_parameter("diagnose_topic").get_type() != rclcpp::PARAMETER_STRING) {
-        RCLCPP_ERROR(this->get_logger(), "diagnose_topic type must be string");
-        return;
-    }
     this->diagnose_topic = this->get_parameter("diagnose_topic").as_string();
 
     //get diag_freq
-    if (this->get_parameter("diag_freq").get_type() != rclcpp::PARAMETER_DOUBLE) {
-        RCLCPP_ERROR(this->get_logger(), "diag_freq type must be float");
-        return;
-    }
     this->diag_freq = this->get_parameter("diag_freq").as_double();
 
     //get respawn
-    if (this->get_parameter("respawn").get_type() != rclcpp::PARAMETER_BOOL) {
-        RCLCPP_ERROR(this->get_logger(), "respawn type must be bool");
-        return;
-    }
     this->respawn = this->get_parameter("respawn").as_bool();
 
     //get update_rate
-    if (this->get_parameter("update_rate").get_type() != rclcpp::PARAMETER_DOUBLE) {
-        RCLCPP_ERROR(this->get_logger(), "update_rate type must be float");
-        return;
-    }
     this->update_rate = this->get_parameter("update_rate").as_double();
 
     //create service client for all nodes
@@ -84,10 +64,12 @@ void LifecycleManager::timer_update_callback() {
 
         //check service status
         if (! this->get_state_clients[node_name]->service_is_ready() || ! this->change_state_clients[node_name]->service_is_ready()) {
-            rclcpp::Clock clock;
-            RCLCPP_ERROR_THROTTLE(this->get_logger(), clock, 1000, "[%s] node offline", node_name.c_str());
+            if(this->node_states[node_name] != "node offline") RCLCPP_ERROR(this->get_logger(), "[%s] node offline", node_name.c_str());
             this->node_states[node_name] = "node offline";
         } else {
+
+            if(this->node_states[node_name] == "node offline") RCLCPP_ERROR(this->get_logger(), "[%s] node online", node_name.c_str());
+
             //check last get node status request status
             if (this->get_state_responses.count(node_name) == 0) {
                 //open a new request if it is the first time

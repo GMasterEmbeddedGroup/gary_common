@@ -44,5 +44,6 @@ class DiagnosticAggregator : public rclcpp_lifecycle::LifecycleNode {
         diagnostic_msgs::msg::DiagnosticArray diagnostic_array;
 
         std::map<std::string, rclcpp::Time> last_update_time;
+        std::map<std::string, bool> stale_flag;
     };
 }
