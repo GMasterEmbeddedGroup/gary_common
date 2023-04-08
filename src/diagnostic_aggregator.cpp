@@ -148,7 +148,7 @@ void DiagnosticAggregator::update() {
             if (!this->stale_flag[i.hardware_id]) RCLCPP_WARN(this->get_logger(), "[%s] diagnostic msg stale", i.hardware_id.c_str());
             this->stale_flag[i.hardware_id] = true;
         }
-        if (this->stale_flag[i.hardware_id]) RCLCPP_WARN(this->get_logger(), "[%s] diagnostic msg exited stale status", i.hardware_id.c_str());
+        if (this->stale_flag[i.hardware_id]) RCLCPP_WARN(this->get_logger(), "[%s] diagnostic msg exited stale status, delta %f", i.hardware_id.c_str(), delta.seconds());
         this->stale_flag[i.hardware_id] = false;
     }
 
