@@ -15,6 +15,9 @@ LifecycleManager::LifecycleManager(const rclcpp::NodeOptions & options) : rclcpp
     this->declare_parameter("respawn", true);
     this->declare_parameter("update_rate", 10.0f);
 
+    //create callback group
+    this->cb_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
     //get node_names
     this->node_names = this->get_parameter("node_names").as_string_array();
 
@@ -47,8 +50,8 @@ LifecycleManager::LifecycleManager(const rclcpp::NodeOptions & options) : rclcpp
     this->diag_msg.header.frame_id = "";
 
     //timers
-    this->timer_update = this->create_wall_timer(1000ms / this->update_rate, std::bind(&LifecycleManager::timer_update_callback, this));
-    this->timer_diag = this->create_wall_timer(1000ms / this->diag_freq, std::bind(&LifecycleManager::timer_diagnose_callback, this));
+    this->timer_update = this->create_wall_timer(1000ms / this->update_rate, [this] { timer_update_callback(); }, this->cb_group);
+    this->timer_diag = this->create_wall_timer(1000ms / this->diag_freq, [this] { timer_diagnose_callback(); }, this->cb_group);
 
     //param callback
     this->param_callback_handle = this->add_on_set_parameters_callback(std::bind(&LifecycleManager::param_update_callback, this, std::placeholders::_1));

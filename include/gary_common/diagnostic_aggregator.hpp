@@ -22,6 +22,10 @@ class DiagnosticAggregator : public rclcpp_lifecycle::LifecycleNode {
         CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
         CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override;
 
+        //callback group
+        rclcpp::CallbackGroup::SharedPtr cb_group;
+
+        //callback
         void sub_callback(diagnostic_msgs::msg::DiagnosticArray::SharedPtr diagnostic);
         void update();
 
