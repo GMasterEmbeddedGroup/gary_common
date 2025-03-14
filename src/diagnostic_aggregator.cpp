@@ -23,36 +23,26 @@ DiagnosticAggregator::DiagnosticAggregator(const rclcpp::NodeOptions &options) :
 CallbackReturn DiagnosticAggregator::on_configure(const rclcpp_lifecycle::State &previous_state) {
     RCL_UNUSED(previous_state);
 
-    //check and create publisher
-    if (this->get_parameter("agg_topic").get_type() != rclcpp::PARAMETER_STRING) {
-        RCLCPP_ERROR(this->get_logger(), "agg_topic type must be string");
-        return CallbackReturn::FAILURE;
-    }
+    //create callback group
+    this->cb_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    rclcpp::SubscriptionOptions sub_options;
+    sub_options.callback_group = cb_group;
+
+    //create publisher
     this->agg_topic = this->get_parameter("agg_topic").as_string();
     this->diagnostic_publisher = this->create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
             this->agg_topic, rclcpp::SystemDefaultsQoS());
 
-    //check and create subscriber
-    if (this->get_parameter("diagnose_topic").get_type() != rclcpp::PARAMETER_STRING) {
-        RCLCPP_ERROR(this->get_logger(), "diagnose_topic type must be string");
-        return CallbackReturn::FAILURE;
-    }
+    //create subscriber
     this->diagnose_topic = this->get_parameter("diagnose_topic").as_string();
     this->diagnostic_subscriber = this->create_subscription<diagnostic_msgs::msg::DiagnosticArray>(
-            this->diagnose_topic, rclcpp::SystemDefaultsQoS(), std::bind(&DiagnosticAggregator::sub_callback, this, std::placeholders::_1));
+            this->diagnose_topic, rclcpp::SystemDefaultsQoS(),
+            std::bind(&DiagnosticAggregator::sub_callback, this, std::placeholders::_1), sub_options);
 
     //get update_freq
-    if (this->get_parameter("update_freq").get_type() != rclcpp::PARAMETER_DOUBLE) {
-        RCLCPP_ERROR(this->get_logger(), "update_freq type must be double");
-        return CallbackReturn::FAILURE;
-    }
     this->update_freq = this->get_parameter("update_freq").as_double();
 
     //get stale_threshold
-    if (this->get_parameter("stale_threshold").get_type() != rclcpp::PARAMETER_DOUBLE) {
-        RCLCPP_ERROR(this->get_logger(), "stale_threshold type must be double");
-        return CallbackReturn::FAILURE;
-    }
     this->stale_threshold = this->get_parameter("stale_threshold").as_double();
 
     RCLCPP_INFO(this->get_logger(), "configured");
@@ -78,7 +68,7 @@ CallbackReturn DiagnosticAggregator::on_activate(const rclcpp_lifecycle::State &
     RCL_UNUSED(previous_state);
 
     //create timer
-    this->timer_update = this->create_wall_timer(1000ms / this->update_freq, [this] { update(); });
+    this->timer_update = this->create_wall_timer(1000ms / this->update_freq, [this] { update(); }, this->cb_group);
     //activate publisher
     this->diagnostic_publisher->on_activate();
 
@@ -126,10 +116,10 @@ void DiagnosticAggregator::sub_callback(diagnostic_msgs::msg::DiagnosticArray::S
 
     RCLCPP_DEBUG(this->get_logger(), "sub_callback");
 
-    for (const auto& i : diagnostic->status) {
+    for (const auto &i: diagnostic->status) {
         RCLCPP_DEBUG(this->get_logger(), "[%s] level %s", i.hardware_id.c_str(), i.message.c_str());
         bool match = false;
-        for(auto& j: this->diagnostic_array.status) {
+        for (auto &j: this->diagnostic_array.status) {
             if (i.hardware_id == j.hardware_id) {
                 j.name = i.name;
                 j.level = i.level;
@@ -156,14 +146,19 @@ void DiagnosticAggregator::update() {
 
     auto time = this->get_clock()->now();
 
-    for(auto &i : this->diagnostic_array.status) {
+    for (auto &i: this->diagnostic_array.status) {
         auto delta = time - this->last_update_time[i.hardware_id];
         if (delta.seconds() > this->stale_threshold) {
             i.level = diagnostic_msgs::msg::DiagnosticStatus_<std::allocator<void>>::STALE;
             i.message = "stale";
-            rclcpp::Clock clock;
-            RCLCPP_WARN_THROTTLE(this->get_logger(), clock, 1000, "[%s] stale", i.hardware_id.c_str());
+            if (!this->stale_flag[i.hardware_id])
+                RCLCPP_WARN(this->get_logger(), "[%s] diagnostic msg stale", i.hardware_id.c_str());
+            this->stale_flag[i.hardware_id] = true;
         }
+        if (this->stale_flag[i.hardware_id])
+            RCLCPP_WARN(this->get_logger(), "[%s] diagnostic msg exited stale status, delta %f", i.hardware_id.c_str(),
+                        delta.seconds());
+        this->stale_flag[i.hardware_id] = false;
     }
 
     this->diagnostic_publisher->publish(this->diagnostic_array);
@@ -174,7 +169,8 @@ int main(int argc, char const *const argv[]) {
 
     rclcpp::executors::SingleThreadedExecutor exe;
 
-    std::shared_ptr<DiagnosticAggregator> diagnostic_aggregator = std::make_shared<DiagnosticAggregator>(rclcpp::NodeOptions());
+    std::shared_ptr<DiagnosticAggregator> diagnostic_aggregator = std::make_shared<DiagnosticAggregator>(
+            rclcpp::NodeOptions());
 
     exe.add_node(diagnostic_aggregator->get_node_base_interface());
 

@@ -21,11 +21,22 @@ class LifecycleManager : public rclcpp::Node {
         bool respawn;
         double update_rate;
 
+        //callback group
+        rclcpp::CallbackGroup::SharedPtr cb_group;
+
+        //callback
+        void timer_update_callback();
+        void timer_diagnose_callback();
+        rcl_interfaces::msg::SetParametersResult param_update_callback(const std::vector<rclcpp::Parameter>& params);
+
+        //publishers
         rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diag_publisher;
 
+        //timers
         rclcpp::TimerBase::SharedPtr timer_update;
         rclcpp::TimerBase::SharedPtr timer_diag;
 
+        //srv handle
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle;
 
         diagnostic_msgs::msg::DiagnosticArray diag_msg;
@@ -38,9 +49,5 @@ class LifecycleManager : public rclcpp::Node {
         std::map<std::string, bool> change_state_configure_flag;
         std::map<std::string, bool> change_state_activate_flag;
         std::map<std::string, std::string> node_states;
-
-        void timer_update_callback();
-        void timer_diagnose_callback();
-        rcl_interfaces::msg::SetParametersResult param_update_callback(const std::vector<rclcpp::Parameter>& params);
     };
 }
